@@ -1,0 +1,46 @@
+<?php
+
+/**
+ * Implements hook_form_alter().
+ */
+
+function site_api_key_form_system_site_information_settings_alter(&$form, $form_state, $form_id) {
+
+  // Add Site API Key field to 'Site Information' section.
+  $site_api_key = \Drupal::config('siteapikey.configuration')->get('siteapikey');
+  $form['site_information']['site_api_key'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Site API Key'),
+    '#default_value' => $site_api_key,
+    '#description' => t('An API Key to access site pages in JSON format.'),
+  );
+
+  // Change form submit button text(Save Configuration) to 'Update Configuration'.
+  $form['actions']['submit']['#value'] = t('Update configuration');
+
+  // Handle form submission.
+  $form['#submit'][] = 'site_api_key_submit_handler';
+}
+
+/**
+ * Submit Handler function.
+ * Implements Submit handler function.
+ */
+function site_api_key_submit_handler($form, &$form_state) {
+  // Updating the system Site API Key variable .
+  $config = \Drupal::configFactory()->getEditable('siteapikey.configuration');
+  $new_site_api = $form_state->getValue(['site_api_key']);
+  $config->set('siteapikey', $new_site_api);
+  $config->save();
+
+  // Display Message fro which Site API Key has been set.
+  \Drupal::messenger()->addMessage("Successfully Set Site API Key to " . $new_site_api);
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function site_api_key_uninstall() {
+  // Remove the previously set Site API Key configuration.
+  \Drupal::configFactory()->getEditable('siteapikey.configuration')->delete();
+}
